@@ -35,6 +35,7 @@ executable hsynth
 
                       -- Sound
                       OpenAL >= 1.7.0.5,
-    extensions:       NamedFieldPuns,
+    extensions:       BlockArguments,
+                      NamedFieldPuns,
                       NumericUnderscores
     ghc-options:      -Wall -threaded -O2

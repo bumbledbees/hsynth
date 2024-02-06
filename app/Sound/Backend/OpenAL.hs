@@ -1,11 +1,9 @@
-{-# LANGUAGE BlockArguments #-}
 module Sound.Backend.OpenAL where
 
 import Control.Monad ( replicateM, when, void )
 import Data.Int
 import Data.Maybe ( fromJust )
 import Foreign.Marshal.Array
-import Foreign.Ptr
 
 import Control.Concurrent ( threadDelay )
 import Control.Concurrent.STM

@@ -9,9 +9,12 @@ import Sound.Backend.Events
 import Sound.Notes
 
 
+data WaveFunction = Sine
+    deriving (Show, Eq)
+
 data BackendState = BackendState { note :: NoteState
                                  , octave :: Octave
-                                 , waveFn :: Float -> Float
+                                 , waveFn :: WaveFunction
                                  , time :: UTCTime }
 
 type State = S.StateT BackendState IO
@@ -20,7 +23,7 @@ type State = S.StateT BackendState IO
 initState :: UTCTime -> BackendState
 initState t = BackendState { note = NoteOff
                            , octave = 4
-                           , waveFn = sin
+                           , waveFn = Sine
                            , time = t }
 
 
@@ -41,8 +44,9 @@ evalState (Environment { sampleRate = rate , initialTime = t0 }) event =
     S.StateT $ \state -> do
         let (TimedEvent time' _) = event
         let (BackendState { note, octave, waveFn, time }) = state
+        let wave = case waveFn of Sine -> sin
         let start = toRational $ diffUTCTime time t0
         let end = toRational $ diffUTCTime time' t0
-        let samples = genSamples rate waveFn note octave start end
+        let samples = genSamples rate wave note octave start end
         let state' = nextState state event
         return (samples, state')

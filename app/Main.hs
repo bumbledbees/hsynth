@@ -76,8 +76,9 @@ main = do
 
     forkOS $ runBackend b
 
-    runUI eq
+    runUI env eq
 
+    putStrLn "Out of UI"
     -- threadDelay 5_000_000
     -- let dt = secondsToNominalDiffTime 3
     -- let t  = (addUTCTime dt it)
