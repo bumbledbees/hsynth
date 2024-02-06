@@ -1,5 +1,6 @@
 module UI where
 
+import Control.Concurrent ( threadDelay )
 import Data.Time.Clock ( getCurrentTime )
 import System.IO
 
@@ -28,6 +29,7 @@ getKey = reverse <$> getKey' ""
 
 uiMain :: TQueue TimedEvent -> IO ()
 uiMain queue = do
+    threadDelay 22_000
     key <- getKey
     case keyEventMap key of
         Just event -> do

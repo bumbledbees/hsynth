@@ -16,7 +16,7 @@ import Sound.OpenAL ( ($=) )
 import Sound.Backend.Environment
 
 
-data DataBuffer = DataBuffer AL.Buffer (Ptr Int16)
+data DataBuffer = DataBuffer AL.Buffer (AL.MemoryRegion Int16)
 
 data ALState = ALState { currentBuffer :: Int
                        , internalBuffer :: [Int16]
@@ -28,41 +28,40 @@ allocBuffer :: Int -> IO DataBuffer
 allocBuffer bufSize = do
     alBuffer <- AL.genObjectName
     pArray <- mallocArray bufSize
-    return (DataBuffer alBuffer pArray)
+    let bufSizeBytes = bufSize * 2  -- Int16 = 2 bytes
+    let memRegion = AL.MemoryRegion pArray (fromIntegral bufSizeBytes)
+    return (DataBuffer alBuffer memRegion)
 
 
 alMain :: TQueue Int16 -> Environment -> StateT ALState IO ()
 alMain audioQueue env = do
     alState <- get
-    liftIO $ threadDelay 100_000
+    liftIO $ threadDelay 22_000
     let (ALState { currentBuffer, internalBuffer, buffers, source }) = alState
     let (Environment { bufSize, bufCount, sampleRate }) = env
-    liftIO $ putStrLn ((show $ length internalBuffer) ++ " samples in buffer")
 
     nProcessedBuffers <- AL.get $ AL.buffersProcessed source
-    liftIO $ putStrLn ("processed buffers: " ++ (show nProcessedBuffers))
+    -- liftIO $ putStr ("processed buffers: " ++ (show nProcessedBuffers))
     when (nProcessedBuffers > 0) do
         void $ AL.unqueueBuffers source nProcessedBuffers
 
     nq <- AL.get $ AL.buffersQueued source
     let nQueuedBuffers = fromIntegral nq
-    liftIO $ putStrLn ("queued buffers: " ++ (show nq))
+    -- liftIO $ putStrLn ("queued buffers: " ++ (show nq))
     let iBufLength = length internalBuffer
 
     if (nQueuedBuffers < bufCount && iBufLength > bufSize) then do
-        let (DataBuffer alBuffer pArray) = buffers !! currentBuffer
+        let (DataBuffer alBuffer memRegion) = buffers !! currentBuffer
+        let (AL.MemoryRegion pArray _) = memRegion
 
         -- put n=bufSize samples from internal buffer into an OpenAL buffer
-        let samples = if (iBufLength > bufSize)
-            then take bufSize internalBuffer
-            else internalBuffer ++ (replicate (bufSize - iBufLength) 0)
-
+        let samples = take bufSize internalBuffer
         liftIO $ pokeArray pArray samples
-        let bufSizeBytes = bufSize * 2  -- Int16 = 2 bytes
-        let region = AL.MemoryRegion pArray (fromIntegral bufSizeBytes)
-        AL.bufferData alBuffer $= AL.BufferData region AL.Mono16 sampleRate
+        AL.bufferData alBuffer $= AL.BufferData memRegion AL.Mono16 sampleRate
         
         -- play the newly queued audio if not already playing
+        -- liftIO $ putStrLn ((show $ iBufLength) ++ " samples in buffer")
+        -- liftIO $ putStrLn ("Queueing buffer " ++ (show currentBuffer))
         AL.queueBuffers source [alBuffer]
         srcState <- AL.get $ AL.sourceState source
         when (srcState /= AL.Playing) (AL.play [source])

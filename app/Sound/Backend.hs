@@ -3,6 +3,7 @@ module Sound.Backend where
 import Control.Concurrent ( forkOS, threadDelay )
 import Control.Monad.State ( evalStateT, liftIO )
 import Data.Int
+import Data.Maybe ( fromMaybe )
 import Data.Time.Clock
 
 import Control.Concurrent.STM
@@ -39,13 +40,11 @@ enqueueAudio queue samples = do
 backendMain :: Backend -> State ()
 backendMain b = do
     let (Backend { audioQueue, eventQueue, environment }) = b
-    liftIO $ threadDelay 500_000
+    liftIO $ threadDelay 22_000
     maybeEvent <- liftIO $ atomically $ tryReadTQueue eventQueue
     currentTime <- liftIO getCurrentTime
-    let event = case maybeEvent of
-            Just e -> e
-            Nothing -> TimedEvent currentTime Noop
-    -- liftIO $ putStrLn (show event)
+    let event = fromMaybe (TimedEvent currentTime Noop) maybeEvent
+    -- liftIO $ putStrLn ("Backend Event: " ++ (show event))
     samples <- evalState environment event
     liftIO $ enqueueAudio audioQueue (downsampleMany samples)
     backendMain b
