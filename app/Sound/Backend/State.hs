@@ -35,8 +35,7 @@ nextState state (TimedEvent time' event) =
         OctaveUp    -> state' { octave = (octave state + 1) }
         OctaveDown  -> state' { octave = (octave state - 1) }
         Noop        -> state'
-    where
-        state' = state { time = time' }
+    where state' = state { time = time' }
 
 
 evalState :: Environment -> TimedEvent -> State [Float]
