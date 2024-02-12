@@ -12,7 +12,7 @@ main = do
     let (Backend { environment = env, eventQueue = eq }) = b
 
     backendThread <- forkOS $ runBackend b
-    putStrLn $ "Backend thread: " ++ (show backendThread)
+    putStrLn $ "Backend thread: " ++ show backendThread
     runUI env eq
 
     return ()

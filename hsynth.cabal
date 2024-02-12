@@ -34,6 +34,7 @@ library libhsynth
                         Sound.Backend.Events,
                         Sound.Backend.State,
                         Sound.Backend.Util,
+                        Sound.Backend.WaveFunction,
                         Sound.Notes
     ghc-options:        -Wall -O2
 
@@ -57,7 +58,8 @@ test-suite spec
     other-modules:      Sound.NotesSpec,
                         Sound.Backend.DSPSpec,
                         Sound.Backend.StateSpec,
-                        Sound.Backend.UtilSpec
+                        Sound.Backend.UtilSpec,
+                        Sound.Backend.WaveFunctionSpec
     build-depends:      hspec >= 2.11.7,
                         libhsynth
     build-tool-depends: hspec-discover:hspec-discover >= 2.11.7

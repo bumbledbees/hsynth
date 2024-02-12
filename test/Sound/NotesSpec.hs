@@ -37,7 +37,7 @@ noteToPitchSpec = describe "noteToPitch" $ do
         _ntp A2 3 `shouldBe` 440.0
         _ntp C 5  `shouldBe` 523.25
         _ntp C 0  `shouldBe` 16.35
-        _ntp Gb 4 `shouldBe` 369.99 
+        _ntp Gb 4 `shouldBe` 369.99
     where _ntp :: Note -> Octave -> Centi  -- truncate to 2 decimal places
           _ntp n o = fromRational $ toRational $ noteToPitch n o
 

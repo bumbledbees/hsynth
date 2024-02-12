@@ -22,4 +22,4 @@ twelfthRoot = 1.059_463_094_359_295_265
 
 noteToPitch :: Note -> Octave -> Float
 noteToPitch note oct = referencePitch * (twelfthRoot ^^ deltaSemitones)
-    where deltaSemitones = (oct * 12 + (fromEnum note)) - (48 + (fromEnum A))
+    where deltaSemitones = (oct * 12 + fromEnum note) - (48 + fromEnum A)

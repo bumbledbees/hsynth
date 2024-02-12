@@ -33,13 +33,14 @@ allocBuffer bufSize = do
 
 alMain :: TQueue Int16 -> Environment -> StateT ALState IO ()
 alMain audioQueue env = do
+    let (Environment { bufSize, bufCount, sampleRate }) = env
+    liftIO $ threadDelay $ 1_000_000 `div` (sampleRate `div` 2)
+
     alState <- get
     let (ALState { currentBuffer, internalBuffer, buffers, source }) = alState
-    let (Environment { bufSize, bufCount, sampleRate }) = env
-    liftIO $ threadDelay (sampleRate `div` 2)
 
     nProcessedBuffers <- AL.get $ AL.buffersProcessed source
-    -- liftIO $ putStr ("processed buffers: " ++ (show nProcessedBuffers))
+    -- liftIO $ putStrLn $ "processed buffers: " ++ show nProcessedBuffers
     when (nProcessedBuffers > 0) do
         void $ AL.unqueueBuffers source nProcessedBuffers
 
@@ -47,8 +48,9 @@ alMain audioQueue env = do
     let nQueuedBuffers = fromIntegral nq
     -- liftIO $ putStrLn ("queued buffers: " ++ (show nq))
     let iBufLength = length internalBuffer
+    -- liftIO $ putStrLn ((show $ iBufLength) ++ " samples in buffer")
 
-    if (nQueuedBuffers < bufCount && iBufLength > bufSize) then do
+    if nQueuedBuffers < bufCount && iBufLength > bufSize then do
         let (DataBuffer alBuffer memRegion) = buffers !! currentBuffer
         let (AL.MemoryRegion pArray _) = memRegion
 
@@ -57,9 +59,8 @@ alMain audioQueue env = do
         liftIO $ pokeArray pArray samples
         let bytes = AL.BufferData memRegion AL.Mono16 (fromIntegral sampleRate)
         AL.bufferData alBuffer $= bytes
-        
+
         -- play the newly queued audio if not already playing
-        -- liftIO $ putStrLn ((show $ iBufLength) ++ " samples in buffer")
         -- liftIO $ putStrLn ("Queueing buffer " ++ (show currentBuffer))
         AL.queueBuffers source [alBuffer]
         srcState <- AL.get $ AL.sourceState source
@@ -70,7 +71,7 @@ alMain audioQueue env = do
     else do
         samples <- liftIO $ atomically $ flushTQueue audioQueue
         put alState { internalBuffer = internalBuffer ++ samples }
-    
+
     alMain audioQueue env
 
 
@@ -94,5 +95,5 @@ runAL env program = do
                           , currentBuffer = 0
                           , internalBuffer = []
                           , source = alSource }
-    
+
     evalStateT (program env) alState

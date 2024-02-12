@@ -3,6 +3,7 @@ module Sound.Backend.DSPSpec ( spec ) where
 import Test.Hspec
 
 import Sound.Backend.DSP
+import Sound.Backend.State ( initState, State(..) )
 import Sound.Backend.Util
 import Sound.Notes
 
@@ -48,10 +49,17 @@ sampleWaveformSpec = describe "sampleWaveform" $ do
 genSamplesSpec :: Spec
 genSamplesSpec = describe "genSamples" $ do
     it "generates the correct number of samples" $ do
-        length (genSamples 1_000 Sine NoteOff 0 0 1)    `shouldBe` 1_000
-        length (genSamples 16_000 Sine NoteOff 0 0 1)   `shouldBe` 16_000
-        length (genSamples 44_100 Sine NoteOff 0 0 1)   `shouldBe` 44_100
-        length (genSamples 44_100 Sine NoteOff 0 0 0.3) `shouldBe` 13_230
+        length (genSamples 1_000 initState 1)    `shouldBe` 1_000
+        length (genSamples 16_000 initState 1)   `shouldBe` 16_000
+        length (genSamples 44_100 initState 1)   `shouldBe` 44_100
+        length (genSamples 44_100 initState 0.3) `shouldBe` 13_230
+    it "generates the same samples regardless of timing" $ do
+        let st t = initState { note = NoteOn C, time = t }
+        let gS (t, t') = genSamples 44_100 (st t) t'
+
+        let segmentedSamples = map gS [(0, 0.3), (0.3, 0.7), (0.7, 1.0)]
+        let continuousSamples = gS (0, 1)
+        concat segmentedSamples `shouldBe` continuousSamples
 
 
 spec :: Spec
