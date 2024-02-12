@@ -19,7 +19,6 @@ data Backend = Backend { audioQueue :: TQueue Int16
                        , eventQueue :: TQueue TimedEvent
                        , environment :: Environment }
 
-
 initBackend :: IO Backend 
 initBackend = do
     aq <- newTQueueIO
@@ -40,13 +39,13 @@ enqueueAudio queue samples = do
 backendMain :: Backend -> State ()
 backendMain b = do
     let (Backend { audioQueue, eventQueue, environment }) = b
-    liftIO $ threadDelay 22_000
+    liftIO $ threadDelay 8_333  -- ~ 1 / 120 s
     maybeEvent <- liftIO $ atomically $ tryReadTQueue eventQueue
     currentTime <- liftIO getCurrentTime
     let event = fromMaybe (TimedEvent currentTime Noop) maybeEvent
     -- liftIO $ putStrLn ("Backend Event: " ++ (show event))
     samples <- evalState environment event
-    liftIO $ enqueueAudio audioQueue (downsampleMany samples)
+    liftIO $ enqueueAudio audioQueue (map sampleF32toS16 samples)
     backendMain b
 
 
@@ -55,6 +54,6 @@ runBackend b = do
     let (Backend { audioQueue, environment }) = b
     let (Environment { initialTime }) = environment
     alThread <- forkOS $ runAL environment (alMain audioQueue)
-    putStrLn ("Spawned AL thread: " ++ (show alThread))
+    putStrLn ("OpenAL subsystem thread: " ++ (show alThread))
     let initialState = initState initialTime
     evalStateT (backendMain b) initialState

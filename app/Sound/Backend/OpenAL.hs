@@ -34,9 +34,9 @@ allocBuffer bufSize = do
 alMain :: TQueue Int16 -> Environment -> StateT ALState IO ()
 alMain audioQueue env = do
     alState <- get
-    liftIO $ threadDelay 22_000
     let (ALState { currentBuffer, internalBuffer, buffers, source }) = alState
     let (Environment { bufSize, bufCount, sampleRate }) = env
+    liftIO $ threadDelay (sampleRate `div` 2)
 
     nProcessedBuffers <- AL.get $ AL.buffersProcessed source
     -- liftIO $ putStr ("processed buffers: " ++ (show nProcessedBuffers))
@@ -55,7 +55,8 @@ alMain audioQueue env = do
         -- put n=bufSize samples from internal buffer into an OpenAL buffer
         let samples = take bufSize internalBuffer
         liftIO $ pokeArray pArray samples
-        AL.bufferData alBuffer $= AL.BufferData memRegion AL.Mono16 sampleRate
+        let bytes = AL.BufferData memRegion AL.Mono16 (fromIntegral sampleRate)
+        AL.bufferData alBuffer $= bytes
         
         -- play the newly queued audio if not already playing
         -- liftIO $ putStrLn ((show $ iBufLength) ++ " samples in buffer")
@@ -76,7 +77,7 @@ alMain audioQueue env = do
 runAL :: Environment -> (Environment -> StateT ALState IO ()) -> IO ()
 runAL env program = do
     let (Environment { bufSize, bufCount, sampleRate }) = env
-    let streamAttributes = [ AL.Frequency sampleRate
+    let streamAttributes = [ AL.Frequency (fromIntegral sampleRate)
                            , AL.MonoSources 1
                            , AL.StereoSources 0 ]
 

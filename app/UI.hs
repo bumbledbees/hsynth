@@ -60,7 +60,7 @@ renderUI vty (Environment { sampleRate, bufSize, bufCount })
 uiMain :: V.Vty -> Environment -> TQueue TimedEvent -> StatefulIO ()
 uiMain vty env queue = do
     state <- get
-    liftIO $ threadDelay 22_000
+    liftIO $ threadDelay 16_667  -- ~ 1 / 60 seconds
     key <- liftIO getKey
     case keyEventMap key of
         Just event -> do

@@ -1,12 +1,14 @@
 module Sound.Backend.Environment where
 
+import Data.Ratio ( (%) )
+
 import Data.Time.Clock
 
 
 data Environment = Environment { bufCount :: Int
                                , bufSize :: Int
                                , initialTime :: UTCTime
-                               , sampleRate :: Float }
+                               , sampleRate :: Int }
 
 
 initEnv :: UTCTime -> Environment
@@ -16,4 +18,5 @@ initEnv t = Environment { bufCount = 3
                         , sampleRate = 44_100 }
     where rate = 44_100
           -- round up to next multiple of 64 for memory alignment
-          bs = ceiling((rate / 10) / 64) * 64  -- ~0.1 seconds
+          s = 10 :: Int
+          bs = ceiling(rate % (s * 64)) * 64  -- ~(1 / s) seconds

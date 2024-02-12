@@ -17,7 +17,7 @@ referencePitch = 440.0
 
 -- 2 ^ 1/12
 twelfthRoot :: Float
-twelfthRoot = 1.059_463_094_359_295
+twelfthRoot = 1.059_463_094_359_295_265
 
 
 noteToPitch :: Note -> Octave -> Float

@@ -1,11 +1,5 @@
 module Sound.Backend.Util where
 
-import Data.Time.Clock
-
-
-nominalDiffTimeToFloat :: NominalDiffTime -> Float
-nominalDiffTimeToFloat dt = fromRational $ toRational dt
-
 
 maxIntNBound :: (Num a, Eq a) => a -> a
 maxIntNBound n = case n of
